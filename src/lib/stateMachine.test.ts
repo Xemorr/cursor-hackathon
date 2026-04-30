@@ -230,6 +230,21 @@ describe("seed demo", () => {
     assert.equal(listDebtors().length, 3);
   });
 
+  it("can seed the demo with custom repayment amounts", () => {
+    const { expense, debtors } = seedDemo({
+      amountsCents: {
+        Sam: 750,
+        Lucia: 1250,
+        Hamza: 250,
+      },
+    });
+
+    assert.equal(expense.totalCents, 2250);
+    assert.equal(debtors.find((debtor) => debtor.name === "Sam")?.amountCents, 750);
+    assert.equal(debtors.find((debtor) => debtor.name === "Lucia")?.amountCents, 1250);
+    assert.equal(debtors.find((debtor) => debtor.name === "Hamza")?.amountCents, 250);
+  });
+
   it("seeding after partial tick progress resets to clean state", async () => {
     const { debtors: initialDebtors } = seedDemo();
 
