@@ -45,7 +45,7 @@ Demo scenario:
 | Paid by | Dev |
 | Debtors | Lucia, Hamza, Dev |
 | Split | Dev GBP 5; Lucia and Hamza GBP 1 each |
-| Demo reference | `SAM-DISH-1` |
+| Demo reference | `SAM-DISH-2` |
 | Real demo recipient | Dev only |
 
 ## Core Priorities

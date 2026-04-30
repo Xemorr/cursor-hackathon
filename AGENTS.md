@@ -23,7 +23,7 @@ Demo expense:
 - Paid by: Dev
 - Debtors: Lucia, Hamza, Dev
 - Split: Dev GBP 5; Lucia and Hamza GBP 1 each
-- Demo payment reference: `SAM-DISH-1`
+- Demo payment reference: `SAM-DISH-2`
 
 Core flow:
 

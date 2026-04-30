@@ -21,7 +21,7 @@ PesterPay turns that into a visible workflow: debtors, payment references, follo
 | Paid by | Dev |
 | Debtors | Lucia, Hamza, Dev |
 | Split | Dev GBP 5; Lucia and Hamza GBP 1 each |
-| Demo reference | `SAM-DISH-1` |
+| Demo reference | `SAM-DISH-2` |
 
 ## Judge-Visible Flow
 

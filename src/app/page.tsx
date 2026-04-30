@@ -546,7 +546,7 @@ export default function Home() {
                         <div className="flex items-center justify-between border-t border-[var(--pp-border)] pt-3 text-[11px]">
                           <dt className="font-bold uppercase tracking-tight text-[var(--pp-text-dim)]">Reference</dt>
                           <dd className="font-mono font-bold text-[var(--pp-text)]">
-                            <a className="text-[var(--pp-lime)] hover:text-[var(--pp-green)]" href={`/pay/${debtor.paymentReference}`}>
+                            <a className="text-[var(--pp-lime)] hover:text-[var(--pp-green)]" href="https://settleup.starlingbank.com/samuel-hollis-994d22" target="_blank" rel="noopener noreferrer">
                               {debtor.paymentReference}
                             </a>
                           </dd>

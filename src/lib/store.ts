@@ -192,7 +192,7 @@ export function seedDemo(input: SeedDemoInput = {}): SeedDemoResult {
       name: "Dev",
       phone: "+447700900111",
       amountCents: devAmountCents,
-      paymentReference: "SAM-DISH-1",
+      paymentReference: "SAM-DISH-2",
     }),
     createDebtor({
       expenseId: expense.id,

@@ -37,7 +37,7 @@ describe("generateAgentMessage", () => {
       name: "Dev",
       amountCents: 500,
       currency: "GBP",
-      paymentReference: "SAM-DISH-1",
+      paymentReference: "SAM-DISH-2",
       escalationLevel: 1,
       state: "created",
       createdAt: new Date().toISOString(),
@@ -46,15 +46,15 @@ describe("generateAgentMessage", () => {
     expense: {
       title: "Dinner at Dishoom",
     },
-    paymentLink: "/pay/SAM-DISH-1",
+    paymentLink: "/pay/SAM-DISH-2",
   };
 
   const mockFetchResponse = (ok: boolean, responseText?: string) => {
     global.fetch = async () =>
-      ({
-        ok,
-        json: async () => ({ response: responseText }),
-      } as Response);
+    ({
+      ok,
+      json: async () => ({ response: responseText }),
+    } as Response);
   };
 
   it("requests enough Ollama tokens for reasoning models", async () => {
@@ -65,7 +65,7 @@ describe("generateAgentMessage", () => {
       return {
         ok: true,
         json: async () => ({
-          response: "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
+          response: "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-2. Pay: /pay/SAM-DISH-2",
         }),
       } as Response;
     };
@@ -93,7 +93,7 @@ describe("generateAgentMessage", () => {
       return {
         ok: true,
         json: async () => ({
-          response: "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
+          response: "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-2. Pay: /pay/SAM-DISH-2",
         }),
       } as Response;
     };
@@ -126,7 +126,7 @@ describe("generateAgentMessage", () => {
     assert.equal(result.source, "ollama_repaired");
     assert.equal(
       result.body,
-      "Hey Dev! Don't forget you owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1."
+      "Hey Dev! Don't forget you owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-2. Pay: /pay/SAM-DISH-2."
     );
     assert.equal(result.safety.valid, true);
   });
@@ -134,21 +134,21 @@ describe("generateAgentMessage", () => {
   it("strips surrounding quotes", async () => {
     mockFetchResponse(
       true,
-      '"Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"'
+      '"Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-2. Pay: /pay/SAM-DISH-2"'
     );
 
     const result = await generateAgentMessage(baseInput);
     assert.equal(result.source, "ollama");
     assert.equal(
       result.body,
-      "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"
+      "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-2. Pay: /pay/SAM-DISH-2"
     );
   });
 
   it("falls back to template_fallback when copy is unsafe (debt collector)", async () => {
     mockFetchResponse(
       true,
-      "I am a debt collector. You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"
+      "I am a debt collector. You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-2. Pay: /pay/SAM-DISH-2"
     );
 
     const result = await generateAgentMessage(baseInput);

@@ -6,29 +6,29 @@ import { buildPublicDemoPaymentLink } from "./twilio";
 
 export type TwilioWhatsAppResult =
   | {
-      status: "sent";
-      ok: true;
-      message: string;
-      to: string;
-      providerMessageSid?: string;
-    }
+    status: "sent";
+    ok: true;
+    message: string;
+    to: string;
+    providerMessageSid?: string;
+  }
   | {
-      status: "skipped";
-      ok: true;
-      message: string;
-      reason:
-        | "twilio_whatsapp_not_configured"
-        | "demo_message_limit_reached"
-        | "non_demo_recipient"
-        | "unsafe_message";
-    }
+    status: "skipped";
+    ok: true;
+    message: string;
+    reason:
+    | "twilio_whatsapp_not_configured"
+    | "demo_message_limit_reached"
+    | "non_demo_recipient"
+    | "unsafe_message";
+  }
   | {
-      status: "failed";
-      ok: false;
-      message: string;
-      reason: "twilio_whatsapp_request_failed";
-      providerStatus?: number;
-    };
+    status: "failed";
+    ok: false;
+    message: string;
+    reason: "twilio_whatsapp_request_failed";
+    providerStatus?: number;
+  };
 
 export type SendDemoWhatsAppInput = {
   debtor: Debtor;
@@ -50,7 +50,7 @@ const skippedEventTypes: Record<Extract<TwilioWhatsAppResult, { status: "skipped
 };
 
 function isPrimaryDemoDebtor(debtor: Debtor): boolean {
-  return debtor.name.trim().toLowerCase() === "dev" && debtor.paymentReference === "SAM-DISH-1";
+  return debtor.name.trim().toLowerCase() === "dev" && debtor.paymentReference === "SAM-DISH-2";
 }
 
 function countSentWhatsAppMessagesForDebtor(debtorId: string): number {
