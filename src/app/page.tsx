@@ -310,11 +310,18 @@ export default function Home() {
         setDemoRunning(true);
         setAmountModalOpen(false);
         setNotice("Demo started. Agent cycles run every 5 seconds.");
+        let isRunning = false;
         cycleTimerRef.current = setInterval(() => {
-          runAgentCycle().catch((error) => {
-            stopDemoTimer();
-            setNotice(error instanceof Error ? error.message : "Agent cycle failed.");
-          });
+          if (isRunning) return;
+          isRunning = true;
+          runAgentCycle()
+            .catch((error) => {
+              stopDemoTimer();
+              setNotice(error instanceof Error ? error.message : "Agent cycle failed.");
+            })
+            .finally(() => {
+              isRunning = false;
+            });
         }, 5000);
       } else {
         setNotice("Demo state reset.");

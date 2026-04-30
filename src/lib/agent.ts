@@ -144,6 +144,12 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
         })
       : undefined;
 
+  // Twilio trial accounts have a strict 1 request per second API limit.
+  // Delay slightly before sending the WhatsApp message to avoid a 429 Too Many Requests error.
+  if (generated.channel === "sms" && sms?.status === "sent") {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+
   const whatsapp =
     generated.channel === "sms"
       ? await sendDemoWhatsApp({
