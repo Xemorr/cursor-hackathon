@@ -161,19 +161,27 @@ export type SeedDemoResult = {
   debtors: Debtor[];
 };
 
+export type SeedDemoInput = {
+  amountsCents?: Partial<Record<"Sam" | "Lucia" | "Hamza", number>>;
+};
+
 /**
  * Resets all state then seeds the canonical Dishoom demo scenario.
  * Always resets first — calling seed twice produces one clean scenario.
  */
-export function seedDemo(): SeedDemoResult {
+export function seedDemo(input: SeedDemoInput = {}): SeedDemoResult {
   resetDebtors();
   resetExpenses();
   resetDemoPayments();
   resetEvents();
 
+  const samAmountCents = input.amountsCents?.Sam ?? 500;
+  const luciaAmountCents = input.amountsCents?.Lucia ?? 100;
+  const hamzaAmountCents = input.amountsCents?.Hamza ?? 100;
+
   const expense = createExpense({
     title: "Dinner at Dishoom",
-    totalCents: 700,
+    totalCents: samAmountCents + luciaAmountCents + hamzaAmountCents,
     currency: "GBP",
     paidBy: "Dev",
   });
@@ -183,21 +191,21 @@ export function seedDemo(): SeedDemoResult {
       expenseId: expense.id,
       name: "Sam",
       phone: "+447700900111",
-      amountCents: 500,
+      amountCents: samAmountCents,
       paymentReference: "SAM-DISH-1",
     }),
     createDebtor({
       expenseId: expense.id,
       name: "Lucia",
       phone: "+447700900112",
-      amountCents: 100,
+      amountCents: luciaAmountCents,
       paymentReference: "LUCIA-DISH-1",
     }),
     createDebtor({
       expenseId: expense.id,
       name: "Hamza",
       phone: "+447700900113",
-      amountCents: 100,
+      amountCents: hamzaAmountCents,
       paymentReference: "HAMZA-DISH-1",
     }),
   ];

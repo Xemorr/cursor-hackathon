@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import type { Debtor, DebtorState, DemoPayment, EventLogEntry } from "@/lib/models";
 import { NarratorPanel } from "@/components/NarratorPanel";
 
@@ -12,10 +13,16 @@ type DemoState = {
 
 type DemoAction = "start" | "reset";
 
-const expense = {
+const defaultExpense = {
   title: "Dinner at Dishoom",
   totalCents: 700,
   paidBy: "Dev",
+};
+
+type AmountInputs = {
+  Sam: string;
+  Lucia: string;
+  Hamza: string;
 };
 
 const stateLabels: Record<DebtorState, string> = {
@@ -161,7 +168,9 @@ export default function Home() {
   const [demoState, setDemoState] = useState<DemoState>({ debtors: [], payments: [], events: [] });
   const [runningAction, setRunningAction] = useState<DemoAction | null>(null);
   const [demoRunning, setDemoRunning] = useState(false);
-  const [notice, setNotice] = useState("Dashboard loaded. Seed demo data to start.");
+  const [amountModalOpen, setAmountModalOpen] = useState(false);
+  const [amountInputs, setAmountInputs] = useState<AmountInputs>({ Sam: "5.00", Lucia: "1.00", Hamza: "1.00" });
+  const [notice, setNotice] = useState("Dashboard loaded. Enter amounts to start.");
   const cycleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const sortedEvents = useMemo(
@@ -180,6 +189,11 @@ export default function Home() {
   const activeDebtCents = demoState.debtors
     .filter((debtor) => debtor.state !== "closed")
     .reduce((sum, debtor) => sum + debtor.amountCents, 0);
+  const expectedTotalCents = currentExpenseActive
+    ? demoState.debtors.reduce((sum, debtor) => sum + debtor.amountCents, 0)
+    : defaultExpense.totalCents;
+  const recoveryProgressPercent =
+    expectedTotalCents > 0 ? Math.round(((expectedTotalCents - activeDebtCents) / expectedTotalCents) * 100) : 0;
   const overallStatus =
     demoState.debtors.length === 0
       ? "No demo loaded"
@@ -233,6 +247,34 @@ export default function Home() {
     setNotice(payload.message ?? "Agent cycle complete.");
   }, [applyDemoPayload, stopDemoTimer]);
 
+  function parseAmountInput(value: string) {
+    if (value.trim() === "") {
+      return undefined;
+    }
+
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount < 0) {
+      return undefined;
+    }
+    return Math.round(amount * 100);
+  }
+
+  function buildAmountPayload() {
+    const sam = parseAmountInput(amountInputs.Sam);
+    const lucia = parseAmountInput(amountInputs.Lucia);
+    const hamza = parseAmountInput(amountInputs.Hamza);
+
+    if (sam === undefined || lucia === undefined || hamza === undefined) {
+      return undefined;
+    }
+
+    return {
+      Sam: sam,
+      Lucia: lucia,
+      Hamza: hamza,
+    };
+  }
+
   async function runAction(action: DemoAction) {
     setRunningAction(action);
     setNotice("Running demo action...");
@@ -246,6 +288,12 @@ export default function Home() {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body:
+          action === "start"
+            ? JSON.stringify({
+                amountsCents: buildAmountPayload(),
+              })
+            : undefined,
       });
       const payload = (await response.json()) as DemoState & { ok?: boolean; message?: string };
 
@@ -260,6 +308,7 @@ export default function Home() {
           clearInterval(cycleTimerRef.current);
         }
         setDemoRunning(true);
+        setAmountModalOpen(false);
         setNotice("Demo started. Agent cycles run every 5 seconds.");
         cycleTimerRef.current = setInterval(() => {
           runAgentCycle().catch((error) => {
@@ -277,6 +326,17 @@ export default function Home() {
     }
   }
 
+  function handleStartDemo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!buildAmountPayload()) {
+      setNotice("Enter valid repayment amounts for Sam, Lucia, and Hamza.");
+      return;
+    }
+
+    void runAction("start");
+  }
+
   useEffect(() => {
     let active = true;
 
@@ -289,7 +349,7 @@ export default function Home() {
       })
       .catch(() => {
         if (active) {
-          setNotice("Dashboard loaded. Seed demo data to start.");
+          setNotice("Dashboard loaded. Enter amounts to start.");
         }
       });
 
@@ -317,12 +377,12 @@ export default function Home() {
               <button
                 className="w-full border border-[var(--pp-lime)] px-3 py-3 text-left text-sm font-bold text-[var(--pp-lime)] hover:bg-[var(--pp-lime)] hover:text-black disabled:cursor-wait disabled:opacity-50"
                 disabled={runningAction !== null}
-                onClick={() => runAction("start")}
+                onClick={() => setAmountModalOpen(true)}
               >
-                [1] Start Demo
+                [1] Enter Amounts
               </button>
               <p className="mt-1 px-1 text-[10px] leading-tight text-[var(--pp-text-dim)] uppercase">
-                Seed Dinner at Dishoom, then run one agent cycle every 5 seconds
+                Set the amount each person needs to pay back, then start automation
               </p>
             </div>
 
@@ -373,12 +433,12 @@ export default function Home() {
             <div className="mt-6 border-t border-[var(--pp-border)] pt-5">
               <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--pp-text-dim)]">
                 <span>Total Recovery Progress</span>
-                <span className="text-[var(--pp-green)]">{Math.round(((expense.totalCents - activeDebtCents) / expense.totalCents) * 100)}%</span>
+                <span className="text-[var(--pp-green)]">{recoveryProgressPercent}%</span>
               </div>
               <div className="h-2 w-full overflow-hidden bg-[var(--pp-border)]">
                 <div
                   className="h-full bg-[var(--pp-green)] shadow-[0_0_10px_rgba(0,230,118,0.4)] transition-all duration-700 ease-out"
-                  style={{ width: `${Math.round(((expense.totalCents - activeDebtCents) / expense.totalCents) * 100)}%` }}
+                  style={{ width: `${recoveryProgressPercent}%` }}
                 />
               </div>
             </div>
@@ -391,18 +451,18 @@ export default function Home() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-[var(--pp-text-dim)]">Target Expense</p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight">
-                  {currentExpenseActive ? expense.title : "Agent Standby"}
+                  {currentExpenseActive ? defaultExpense.title : "Agent Standby"}
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--pp-text-muted)]">
                   {currentExpenseActive
-                    ? `PesterPay is actively recovering funds for "${expense.title}", originally paid by ${expense.paidBy}. Monitoring ${demoState.debtors.length} debtors for payment reconciliation.`
-                    : "System ready. Seed the Dishoom demo to observe the autonomous debt collection lifecycle in action."}
+                    ? `PesterPay is actively recovering funds for "${defaultExpense.title}", originally paid by ${defaultExpense.paidBy}. Monitoring ${demoState.debtors.length} debtors for payment reconciliation.`
+                    : "System ready. Enter repayment amounts to observe the autonomous debt collection lifecycle in action."}
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div className="min-w-28 border border-[var(--pp-border)] p-3">
                   <p className="text-[var(--pp-text-dim)] uppercase text-[10px] font-bold">Total Bill</p>
-                  <p className="mt-1 text-lg font-bold">{currentExpenseActive ? formatMoney(expense.totalCents) : "--"}</p>
+                  <p className="mt-1 text-lg font-bold">{currentExpenseActive ? formatMoney(expectedTotalCents) : "--"}</p>
                 </div>
                 <div className="min-w-28 border border-[var(--pp-border)] p-3">
                   <p className="text-[var(--pp-text-dim)] uppercase text-[10px] font-bold">Targets</p>
@@ -430,7 +490,7 @@ export default function Home() {
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--pp-text-dim)]">No Active Debtors</p>
                   <p className="mt-2 text-sm text-[var(--pp-text-muted)]">Initialize the system to begin autonomous recovery.</p>
                   <div className="mt-6 h-px w-12 bg-[var(--pp-border-strong)]"></div>
-                  <p className="mt-6 text-[10px] uppercase text-[var(--pp-text-dim)]">Awaiting &quot;Seed Demo Data&quot; command</p>
+                  <p className="mt-6 text-[10px] uppercase text-[var(--pp-text-dim)]">Awaiting &quot;Enter Amounts&quot; command</p>
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
@@ -557,6 +617,61 @@ export default function Home() {
           </div>
         </section>
       </div>
+      {amountModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <form
+            className="w-full max-w-md border border-[var(--pp-border-strong)] bg-[var(--pp-panel)] p-5 shadow-2xl"
+            onSubmit={handleStartDemo}
+          >
+            <div className="mb-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-[var(--pp-lime)]">Demo Setup</p>
+              <h2 className="mt-2 text-xl font-bold tracking-tight">Enter Amounts</h2>
+            </div>
+
+            <div className="grid gap-3">
+              {(["Sam", "Lucia", "Hamza"] as const).map((name) => (
+                <label className="grid gap-1" key={name}>
+                  <span className="text-[10px] font-bold uppercase tracking-tight text-[var(--pp-text-dim)]">
+                    {name}
+                  </span>
+                  <input
+                    className="border border-[var(--pp-border)] bg-[var(--pp-bg)] px-3 py-2 font-mono text-sm text-[var(--pp-text)] outline-none focus:border-[var(--pp-lime)]"
+                    min="0"
+                    onChange={(event) =>
+                      setAmountInputs((current) => ({
+                        ...current,
+                        [name]: event.target.value,
+                      }))
+                    }
+                    required
+                    step="0.01"
+                    type="number"
+                    value={amountInputs[name]}
+                  />
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                className="border border-[var(--pp-border-strong)] px-3 py-3 text-left text-sm font-bold hover:border-[var(--pp-text)] disabled:cursor-wait disabled:opacity-50"
+                disabled={runningAction !== null}
+                onClick={() => setAmountModalOpen(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="border border-[var(--pp-lime)] px-3 py-3 text-left text-sm font-bold text-[var(--pp-lime)] hover:bg-[var(--pp-lime)] hover:text-black disabled:cursor-wait disabled:opacity-50"
+                disabled={runningAction !== null}
+                type="submit"
+              >
+                Start Demo
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   );
 }
