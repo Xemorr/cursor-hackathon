@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Debtor, DebtorState, EventLogEntry } from "@/lib/models";
+import type { Debtor, DebtorState, DemoPayment, EventLogEntry } from "@/lib/models";
 import { NarratorPanel } from "@/components/NarratorPanel";
 
 type DemoState = {
   debtors: Debtor[];
+  payments: DemoPayment[];
   events: EventLogEntry[];
 };
 
@@ -13,7 +14,7 @@ type DemoAction = "seed" | "reset" | "tick";
 
 const expense = {
   title: "Dinner at Dishoom",
-  totalCents: 300,
+  totalCents: 700,
   paidBy: "Dev",
 };
 
@@ -93,6 +94,12 @@ function getLastContacted(debtor: Debtor, events: EventLogEntry[]) {
     .at(-1)?.createdAt;
 }
 
+function getPaidBackCents(debtor: Debtor, payments: DemoPayment[]) {
+  return payments
+    .filter((payment) => payment.debtorId === debtor.id && payment.direction === "incoming")
+    .reduce((sum, payment) => sum + payment.amountCents, 0);
+}
+
 function metadataRows(metadata?: Record<string, unknown>) {
   if (!metadata) {
     return [];
@@ -151,7 +158,7 @@ function eventStatusInfo(type: EventLogEntry["eventType"]) {
 }
 
 export default function Home() {
-  const [demoState, setDemoState] = useState<DemoState>({ debtors: [], events: [] });
+  const [demoState, setDemoState] = useState<DemoState>({ debtors: [], payments: [], events: [] });
   const [runningAction, setRunningAction] = useState<DemoAction | null>(null);
   const [notice, setNotice] = useState("Dashboard loaded. Seed demo data to start.");
 
@@ -201,6 +208,7 @@ export default function Home() {
 
       setDemoState({
         debtors: payload.debtors ?? [],
+        payments: payload.payments ?? [],
         events: payload.events ?? [],
       });
       setNotice(
@@ -260,7 +268,7 @@ export default function Home() {
                 [1] Seed Demo Data
               </button>
               <p className="mt-1 px-1 text-[10px] leading-tight text-[var(--pp-text-dim)] uppercase">
-                Initialize &quot;Dinner at Dishoom&quot; scenario (£3, 3 debtors)              </p>
+                Initialize &quot;Dinner at Dishoom&quot; scenario (£7, 3 debtors)              </p>
             </div>
 
             <div>
@@ -396,6 +404,21 @@ export default function Home() {
                         <span className={`border px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${stateTone(debtor.state)}`}>
                           {stateLabels[debtor.state]}
                         </span>
+                      </div>
+
+                      <div className="mt-5 grid grid-cols-2 gap-2">
+                        <div className="border border-[var(--pp-border)] bg-[var(--pp-bg-soft)] p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--pp-text-dim)]">Paid Back</p>
+                          <p className="mt-1 text-lg font-bold tracking-tight text-[var(--pp-green)]">
+                            {formatMoney(getPaidBackCents(debtor, demoState.payments), debtor.currency)}
+                          </p>
+                        </div>
+                        <div className="border border-[var(--pp-border)] bg-[var(--pp-bg-soft)] p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-tight text-[var(--pp-text-dim)]">Remaining</p>
+                          <p className="mt-1 text-lg font-bold tracking-tight text-[var(--pp-amber)]">
+                            {formatMoney(Math.max(debtor.amountCents - getPaidBackCents(debtor, demoState.payments), 0), debtor.currency)}
+                          </p>
+                        </div>
                       </div>
 
                       <div className="mt-6">

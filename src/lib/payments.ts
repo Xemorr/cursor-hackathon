@@ -6,7 +6,7 @@ import {
   summarizeIncomingSettledFeedItems,
   type StarlingFeedItem,
 } from "./starling";
-import { createDemoPayment, getDebtorByPaymentReference, saveDebtor } from "./store";
+import { createDemoPayment, getDebtorByPaymentReference, listDemoPayments, saveDebtor } from "./store";
 import { transitionDebtor } from "./stateMachine";
 
 export type PaymentMatchOutcome = "matched" | "probable_match" | "no_match" | "partial_wrong_amount";
@@ -29,6 +29,8 @@ export type SubmitDemoPaymentInput = {
   reference: string;
   amountCents?: number;
   direction?: DemoPayment["direction"];
+  source?: DemoPayment["source"];
+  externalId?: string;
   createdAt?: string;
 };
 
@@ -175,6 +177,8 @@ export function submitDemoPayment(input: SubmitDemoPaymentInput): SubmitDemoPaym
     amountCents: input.amountCents ?? debtor.amountCents,
     currency: debtor.currency,
     direction: input.direction ?? "incoming",
+    source: input.source ?? "demo",
+    externalId: input.externalId,
     createdAt: input.createdAt,
   });
 
@@ -358,10 +362,17 @@ export async function reconcileStarlingSettledTransactions(
       continue;
     }
 
+    const alreadyRecorded = listDemoPayments().some((payment) => payment.externalId === item.feedItemUid);
+    if (alreadyRecorded) {
+      continue;
+    }
+
     const result = submitDemoPayment({
       reference: debtor.paymentReference,
       amountCents: candidate.amountCents,
       direction: candidate.direction,
+      source: "starling",
+      externalId: item.feedItemUid,
       createdAt: candidate.createdAt,
     });
 

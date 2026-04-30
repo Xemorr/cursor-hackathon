@@ -88,7 +88,7 @@ describe("debtor state machine", () => {
           feedItemUid: "feed-sam-agent-cycle",
           amount: {
             currency: "GBP",
-            minorUnits: 100,
+            minorUnits: 500,
           },
           direction: "IN",
           reference: "SAM-DISH-1",
@@ -123,7 +123,7 @@ describe("message generation", () => {
     assert.equal(message.safety.valid, true);
     assert.ok(message.body.length <= 280);
     assert.match(message.body, /Sam/);
-    assert.match(message.body, /£1/);
+    assert.match(message.body, /£5/);
     assert.match(message.body, /Dinner at Dishoom/);
     assert.match(message.body, /SAM-DISH-1/);
     assert.match(message.body, /\/pay\/SAM-DISH-1/);
@@ -135,7 +135,7 @@ describe("message generation", () => {
     assert.ok(sam);
 
     const safety = validateMessageSafety(
-      "I am a debt collector bank. Pay £1 for Dinner at Dishoom with ref SAM-DISH-1 at /pay/SAM-DISH-1.",
+      "I am a debt collector bank. Pay £5 for Dinner at Dishoom with ref SAM-DISH-1 at /pay/SAM-DISH-1.",
       {
         debtor: sam,
         expense,
@@ -167,7 +167,7 @@ describe("message generation", () => {
 
     assert.equal(message.source, "template_fallback");
     assert.equal(message.safety.valid, true);
-    assert.match(message.body, /£1/);
+    assert.match(message.body, /£5/);
     assert.match(message.body, /Dinner at Dishoom/);
     assert.match(message.body, /SAM-DISH-1/);
   });
@@ -199,14 +199,20 @@ describe("seed demo", () => {
     assert.equal(listExpenses().length, 1);
     assert.equal(listDebtors().length, 3);
     assert.equal(expense.title, "Dinner at Dishoom");
-    assert.equal(expense.totalCents, 300);
+    assert.equal(expense.totalCents, 700);
     assert.equal(debtors.length, 3);
 
     const names = debtors.map((d) => d.name).sort();
     assert.deepEqual(names, ["Hamza", "Lucia", "Sam"]);
 
+    const expectedAmounts = new Map([
+      ["Sam", 500],
+      ["Lucia", 100],
+      ["Hamza", 100],
+    ]);
+
     for (const debtor of debtors) {
-      assert.equal(debtor.amountCents, 100);
+      assert.equal(debtor.amountCents, expectedAmounts.get(debtor.name));
       assert.equal(debtor.expenseId, expense.id);
       assert.equal(debtor.state, "created");
     }
@@ -295,7 +301,7 @@ describe("Starling reconciliation", () => {
     assert.ok(sam);
 
     const result = await reconcileStarlingSettledTransactions({
-      expectedAmountCents: 100,
+      expectedAmountCents: 500,
       minTransactionTimestamp: "2026-04-30T10:00:00.000Z",
       maxTransactionTimestamp: "2026-04-30T11:00:00.000Z",
       feedItems: [
@@ -303,7 +309,7 @@ describe("Starling reconciliation", () => {
           feedItemUid: "feed-sam-1",
           amount: {
             currency: "GBP",
-            minorUnits: 100,
+            minorUnits: 500,
           },
           direction: "IN",
           reference: "SAM-DISH-1",
@@ -312,7 +318,7 @@ describe("Starling reconciliation", () => {
       ],
     });
 
-    assert.equal(result.totalIncomingCents, 100);
+    assert.equal(result.totalIncomingCents, 500);
     assert.equal(result.totalMatchesExpected, true);
     assert.equal(result.matchedPayments.length, 1);
     assert.equal(result.matchedPayments[0].outcome, "matched");
@@ -326,7 +332,7 @@ describe("Starling reconciliation", () => {
     assert.ok(sam);
 
     const result = await reconcileStarlingSettledTransactions({
-      expectedAmountCents: 100,
+      expectedAmountCents: 500,
       feedItems: [
         {
           feedItemUid: "feed-sam-short",
@@ -358,7 +364,7 @@ describe("agent tick reliability", () => {
       expenseId: "expense-closed",
       name: "Sam",
       phone: "+447700900111",
-      amountCents: 100,
+      amountCents: 500,
     });
 
     const payment = submitDemoPayment({
@@ -402,7 +408,7 @@ describe("agent tick reliability", () => {
       expenseId: "expense-all-closed",
       name: "Sam",
       phone: "+447700900111",
-      amountCents: 100,
+      amountCents: 500,
     });
 
     const payment = submitDemoPayment({
@@ -438,7 +444,7 @@ describe("payment reconciliation", () => {
 
     const result = submitDemoPayment({
       reference: "SAM-DISH-1",
-      amountCents: 100,
+      amountCents: 500,
     });
 
     assert.equal(result.ok, true);
@@ -485,7 +491,7 @@ describe("payment reconciliation", () => {
       id: "payment-1",
       debtorId: sam.id,
       reference: "WRONG-REF",
-      amountCents: 100,
+      amountCents: 500,
       currency: "GBP",
       direction: "incoming",
       createdAt: new Date().toISOString(),
@@ -521,7 +527,7 @@ describe("payment reconciliation", () => {
 
     const result = submitDemoPayment({
       reference: "SAM-DISH-1",
-      amountCents: 100,
+      amountCents: 500,
       direction: "outgoing",
     });
 
@@ -537,14 +543,14 @@ describe("payment reconciliation", () => {
     const sam = debtors.find((debtor) => debtor.paymentReference === "SAM-DISH-1");
     assert.ok(sam);
 
-    const first = submitDemoPayment({ reference: "SAM-DISH-1", amountCents: 100 });
+    const first = submitDemoPayment({ reference: "SAM-DISH-1", amountCents: 500 });
     assert.equal(first.ok, true);
     if (!first.ok) return;
     assert.equal(first.debtor.state, "closed");
 
     const eventCountAfterFirst = listEvents(sam.id).length;
 
-    const second = submitDemoPayment({ reference: "SAM-DISH-1", amountCents: 100 });
+    const second = submitDemoPayment({ reference: "SAM-DISH-1", amountCents: 500 });
     assert.equal(second.ok, true);
     if (!second.ok) return;
     assert.equal(second.debtor.state, "closed");

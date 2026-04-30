@@ -17,10 +17,10 @@ PesterPay turns that into a visible workflow: debtors, payment references, follo
 | Field | Value |
 | --- | --- |
 | Expense | Dinner at Dishoom |
-| Total | GBP 3 |
+| Total | GBP 7 |
 | Paid by | Dev |
 | Debtors | Lucia, Hamza, Sam |
-| Split | GBP 1 each |
+| Split | Sam GBP 5; Lucia and Hamza GBP 1 each |
 | Demo reference | `SAM-DISH-1` |
 
 ## Judge-Visible Flow

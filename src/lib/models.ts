@@ -41,6 +41,8 @@ export type DemoPayment = {
   amountCents: number;
   currency: "GBP" | "USD";
   direction: "incoming" | "outgoing";
+  source?: "demo" | "starling";
+  externalId?: string;
   createdAt: string;
 };
 

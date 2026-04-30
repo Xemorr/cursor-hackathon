@@ -18,7 +18,7 @@ The demo is intentionally narrow. Build the reliable fake/demo loop first; add r
 
 The user enters a natural-language expense:
 
-> I paid GBP 3 for dinner at Dishoom. Split it between Lucia, Hamza and Sam.
+> I paid GBP 7 for dinner at Dishoom. Split it between Lucia, Hamza and Sam.
 
 PesterPay creates debtor records, generates payment references, sends escalating SMS/call follow-ups, checks payment status, computes a payment reconciliation confidence score, updates debtor state, and logs every step in an event timeline.
 
@@ -41,10 +41,10 @@ Demo scenario:
 | Field | Value |
 | --- | --- |
 | Expense | Dinner at Dishoom |
-| Total | GBP 3 |
+| Total | GBP 7 |
 | Paid by | Dev |
 | Debtors | Lucia, Hamza, Sam |
-| Split | GBP 1 each |
+| Split | Sam GBP 5; Lucia and Hamza GBP 1 each |
 | Demo reference | `SAM-DISH-1` |
 | Real demo recipient | Sam only |
 
