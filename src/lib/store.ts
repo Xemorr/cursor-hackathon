@@ -126,6 +126,8 @@ export type CreateDemoPaymentInput = {
   amountCents: number;
   currency?: DemoPayment["currency"];
   direction?: DemoPayment["direction"];
+  source?: DemoPayment["source"];
+  externalId?: string;
   createdAt?: string;
 };
 
@@ -137,6 +139,8 @@ export function createDemoPayment(input: CreateDemoPaymentInput): DemoPayment {
     amountCents: input.amountCents,
     currency: input.currency ?? "GBP",
     direction: input.direction ?? "incoming",
+    source: input.source,
+    externalId: input.externalId,
     createdAt: input.createdAt ?? new Date().toISOString(),
   };
 
@@ -169,7 +173,7 @@ export function seedDemo(): SeedDemoResult {
 
   const expense = createExpense({
     title: "Dinner at Dishoom",
-    totalCents: 300,
+    totalCents: 700,
     currency: "GBP",
     paidBy: "Dev",
   });
@@ -179,7 +183,7 @@ export function seedDemo(): SeedDemoResult {
       expenseId: expense.id,
       name: "Sam",
       phone: "+447700900111",
-      amountCents: 100,
+      amountCents: 500,
       paymentReference: "SAM-DISH-1",
     }),
     createDebtor({
