@@ -70,6 +70,8 @@ describe("debtor state machine", () => {
         "SMS_2_SENT",
         "PAYMENT_CHECK_NO_MATCH",
         "MESSAGE_GENERATED",
+        "VOICE_CALL_ATTEMPTED",
+        "VOICE_CALL_SKIPPED_DEMO_PROVIDER",
         "CALL_TRIGGERED",
       ],
     );

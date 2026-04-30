@@ -8,6 +8,7 @@ import { getDebtor, getExpense, listDebtors, saveDebtor } from "./store";
 import { generateAgentMessage } from "./ollama";
 import { transitionDebtor } from "./stateMachine";
 import { buildPublicDemoPaymentLink } from "./twilio";
+import { sendVoiceCall, type VoiceCallResult } from "./voice";
 import { sendDemoWhatsApp, type TwilioWhatsAppResult } from "./whatsapp";
 
 const coreDemoAdvance: Partial<Record<DebtorState, DebtorState>> = {
@@ -29,6 +30,7 @@ export type AgentTickResult =
       advanced?: boolean;
       message: string;
       generatedMessage?: string;
+      voice?: VoiceCallResult;
       whatsapp?: TwilioWhatsAppResult;
       starling?: ReconcileStarlingSettledTransactionsResult;
     }
@@ -141,6 +143,15 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
         })
       : undefined;
 
+  const voice =
+    generated.channel === "call_script"
+      ? await sendVoiceCall({
+          debtor,
+          expense,
+          generatedMessage: generated,
+        })
+      : undefined;
+
   if (whatsapp?.status === "failed") {
     return {
       ok: false,
@@ -158,6 +169,12 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
       messageSource: generated.source,
       twilioWhatsAppStatus: whatsapp?.status,
       twilioWhatsAppReason: whatsapp?.status === "skipped" ? whatsapp.reason : undefined,
+      voiceProvider: voice?.provider,
+      voiceStatus: voice?.status,
+      voiceReason: voice?.status === "skipped" ? voice.reason : undefined,
+      voiceProviderCallId: voice?.status === "sent" ? voice.providerCallId : undefined,
+      voiceProviderConversationId: voice?.status === "sent" ? voice.providerConversationId : undefined,
+      voiceTo: voice?.status === "sent" ? voice.to : undefined,
     },
   });
 
@@ -175,6 +192,7 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
     debtor: result.debtor,
     advanced: true,
     generatedMessage: generated.body,
+    voice,
     whatsapp,
     starling,
     message: `Advanced debtor ${debtor.id} from ${debtor.state} to ${to}.`,
