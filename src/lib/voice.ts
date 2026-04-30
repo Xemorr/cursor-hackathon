@@ -100,7 +100,7 @@ function resolveDemoRecipient(input: SendVoiceCallInput): string | undefined {
     return input.to;
   }
 
-  if (input.debtor.name.trim().toLowerCase() === "sam") {
+  if (input.debtor.name.trim().toLowerCase() === "dev") {
     return process.env.DEMO_SAM_PHONE_NUMBER ?? input.debtor.phone;
   }
 

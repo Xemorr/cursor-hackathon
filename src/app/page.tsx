@@ -20,7 +20,7 @@ const defaultExpense = {
 };
 
 type AmountInputs = {
-  Sam: string;
+  Dev: string;
   Lucia: string;
   Hamza: string;
 };
@@ -169,7 +169,7 @@ export default function Home() {
   const [runningAction, setRunningAction] = useState<DemoAction | null>(null);
   const [demoRunning, setDemoRunning] = useState(false);
   const [amountModalOpen, setAmountModalOpen] = useState(false);
-  const [amountInputs, setAmountInputs] = useState<AmountInputs>({ Sam: "5.00", Lucia: "1.00", Hamza: "1.00" });
+  const [amountInputs, setAmountInputs] = useState<AmountInputs>({ Dev: "5.00", Lucia: "1.00", Hamza: "1.00" });
   const [notice, setNotice] = useState("Dashboard loaded. Enter amounts to start.");
   const cycleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -260,16 +260,16 @@ export default function Home() {
   }
 
   function buildAmountPayload() {
-    const sam = parseAmountInput(amountInputs.Sam);
+    const dev = parseAmountInput(amountInputs.Dev);
     const lucia = parseAmountInput(amountInputs.Lucia);
     const hamza = parseAmountInput(amountInputs.Hamza);
 
-    if (sam === undefined || lucia === undefined || hamza === undefined) {
+    if (dev === undefined || lucia === undefined || hamza === undefined) {
       return undefined;
     }
 
     return {
-      Sam: sam,
+      Dev: dev,
       Lucia: lucia,
       Hamza: hamza,
     };
@@ -330,7 +330,7 @@ export default function Home() {
     event.preventDefault();
 
     if (!buildAmountPayload()) {
-      setNotice("Enter valid repayment amounts for Sam, Lucia, and Hamza.");
+      setNotice("Enter valid repayment amounts for Dev, Lucia, and Hamza.");
       return;
     }
 
@@ -629,7 +629,7 @@ export default function Home() {
             </div>
 
             <div className="grid gap-3">
-              {(["Sam", "Lucia", "Hamza"] as const).map((name) => (
+              {(["Dev", "Lucia", "Hamza"] as const).map((name) => (
                 <label className="grid gap-1" key={name}>
                   <span className="text-[10px] font-bold uppercase tracking-tight text-[var(--pp-text-dim)]">
                     {name}

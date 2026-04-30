@@ -25,10 +25,10 @@ function restoreEnv() {
   }
 }
 
-function createSamDebtor() {
+function createDevDebtor() {
   return createDebtor({
     expenseId: "expense-voice",
-    name: "Sam",
+    name: "Dev",
     phone: "+447700900111",
     amountCents: 3200,
     paymentReference: "SAM-DISH-32",
@@ -47,7 +47,7 @@ describe("sendVoiceCall", () => {
     process.env.VOICE_PROVIDER = "demo";
     delete process.env.DEMO_SAM_PHONE_NUMBER;
 
-    const debtor = createSamDebtor();
+    const debtor = createDevDebtor();
     const generatedMessage = generateTemplateMessage({ debtor, channel: "call_script", escalationLevel: 3 });
 
     const result = await sendVoiceCall({ debtor, generatedMessage });
@@ -68,7 +68,7 @@ describe("sendVoiceCall", () => {
     process.env.VONAGE_PRIVATE_KEY_PATH = "./private.key";
     process.env.VONAGE_FROM_NUMBER = "12345678901";
 
-    const debtor = createSamDebtor();
+    const debtor = createDevDebtor();
     const generatedMessage = generateTemplateMessage({ debtor, channel: "call_script", escalationLevel: 3 });
 
     const result = await sendVoiceCall({ debtor, generatedMessage, to: "+447700900111" });

@@ -17,7 +17,7 @@ describe("debtor state machine", () => {
 
     const debtor = createDebtor({
       expenseId: "expense-1",
-      name: "Sam",
+      name: "Dev",
       phone: "+447700900111",
       amountCents: 1200,
     });
@@ -40,7 +40,7 @@ describe("debtor state machine", () => {
 
     const debtor = createDebtor({
       expenseId: "expense-1",
-      name: "Sam",
+      name: "Dev",
       phone: "+447700900111",
       amountCents: 1200,
     });
@@ -126,7 +126,7 @@ describe("message generation", () => {
     assert.equal(message.source, "template");
     assert.equal(message.safety.valid, true);
     assert.ok(message.body.length <= 280);
-    assert.match(message.body, /Sam/);
+    assert.match(message.body, /Dev/);
     assert.match(message.body, /£5/);
     assert.match(message.body, /Dinner at Dishoom/);
     assert.match(message.body, /SAM-DISH-1/);
@@ -207,10 +207,10 @@ describe("seed demo", () => {
     assert.equal(debtors.length, 3);
 
     const names = debtors.map((d) => d.name).sort();
-    assert.deepEqual(names, ["Hamza", "Lucia", "Sam"]);
+    assert.deepEqual(names, ["Dev", "Hamza", "Lucia"]);
 
     const expectedAmounts = new Map([
-      ["Sam", 500],
+      ["Dev", 500],
       ["Lucia", 100],
       ["Hamza", 100],
     ]);
@@ -233,14 +233,14 @@ describe("seed demo", () => {
   it("can seed the demo with custom repayment amounts", () => {
     const { expense, debtors } = seedDemo({
       amountsCents: {
-        Sam: 750,
+        Dev: 750,
         Lucia: 1250,
         Hamza: 250,
       },
     });
 
     assert.equal(expense.totalCents, 2250);
-    assert.equal(debtors.find((debtor) => debtor.name === "Sam")?.amountCents, 750);
+    assert.equal(debtors.find((debtor) => debtor.name === "Dev")?.amountCents, 750);
     assert.equal(debtors.find((debtor) => debtor.name === "Lucia")?.amountCents, 1250);
     assert.equal(debtors.find((debtor) => debtor.name === "Hamza")?.amountCents, 250);
   });
@@ -381,7 +381,7 @@ describe("agent tick reliability", () => {
 
     const debtor = createDebtor({
       expenseId: "expense-closed",
-      name: "Sam",
+      name: "Dev",
       phone: "+447700900111",
       amountCents: 500,
     });
@@ -425,7 +425,7 @@ describe("agent tick reliability", () => {
 
     const debtor = createDebtor({
       expenseId: "expense-all-closed",
-      name: "Sam",
+      name: "Dev",
       phone: "+447700900111",
       amountCents: 500,
     });

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   const { expense, debtors } = seedDemo({
     amountsCents: {
-      Sam: parseAmountCents((amounts as Record<string, unknown>).Sam),
+      Dev: parseAmountCents((amounts as Record<string, unknown>).Dev),
       Lucia: parseAmountCents((amounts as Record<string, unknown>).Lucia),
       Hamza: parseAmountCents((amounts as Record<string, unknown>).Hamza),
     },
