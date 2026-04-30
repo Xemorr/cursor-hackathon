@@ -25,20 +25,20 @@ export type AgentTickInput = {
 
 export type AgentTickResult =
   | {
-      ok: true;
-      debtor?: Debtor;
-      advanced?: boolean;
-      message: string;
-      generatedMessage?: string;
-      sms?: TwilioSmsResult;
-      voice?: VoiceCallResult;
-      whatsapp?: TwilioWhatsAppResult;
-      starling?: ReconcileStarlingSettledTransactionsResult;
-    }
+    ok: true;
+    debtor?: Debtor;
+    advanced?: boolean;
+    message: string;
+    generatedMessage?: string;
+    sms?: TwilioSmsResult;
+    voice?: VoiceCallResult;
+    whatsapp?: TwilioWhatsAppResult;
+    starling?: ReconcileStarlingSettledTransactionsResult;
+  }
   | {
-      ok: false;
-      message: string;
-    };
+    ok: false;
+    message: string;
+  };
 
 export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickResult> {
   let debtors = listDebtors();
@@ -138,10 +138,10 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
   const sms =
     generated.channel === "sms"
       ? await sendDemoSms({
-          debtor,
-          expense,
-          generatedMessage: generated,
-        })
+        debtor,
+        expense,
+        generatedMessage: generated,
+      })
       : undefined;
 
   // Twilio trial accounts have a strict 1 request per second API limit.
@@ -153,34 +153,24 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
   const whatsapp =
     generated.channel === "sms"
       ? await sendDemoWhatsApp({
-          debtor,
-          expense,
-          generatedMessage: generated,
-        })
+        debtor,
+        expense,
+        generatedMessage: generated,
+      })
       : undefined;
 
   const voice =
     generated.channel === "call_script"
       ? await sendVoiceCall({
-          debtor,
-          expense,
-          generatedMessage: generated,
-        })
+        debtor,
+        expense,
+        generatedMessage: generated,
+      })
       : undefined;
 
-  if (sms?.status === "failed") {
-    return {
-      ok: false,
-      message: sms.message,
-    };
-  }
-
-  if (whatsapp?.status === "failed") {
-    return {
-      ok: false,
-      message: whatsapp.message,
-    };
-  }
+  // We intentionally do not abort the agent tick if a provider fails (e.g. 429 rate limits).
+  // The state machine should advance so the demo can continue to the next escalation (e.g. voice).
+  // The failure is already logged in the event timeline.
 
   const result = transitionDebtor({
     debtor,
