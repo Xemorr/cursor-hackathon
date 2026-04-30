@@ -34,7 +34,7 @@ describe("generateAgentMessage", () => {
     debtor: {
       id: "debtor_1",
       expenseId: "exp_1",
-      name: "Sam",
+      name: "Dev",
       amountCents: 500,
       currency: "GBP",
       paymentReference: "SAM-DISH-1",
@@ -65,7 +65,7 @@ describe("generateAgentMessage", () => {
       return {
         ok: true,
         json: async () => ({
-          response: "Hey Sam! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
+          response: "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
         }),
       } as Response;
     };
@@ -93,7 +93,7 @@ describe("generateAgentMessage", () => {
       return {
         ok: true,
         json: async () => ({
-          response: "Hey Sam! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
+          response: "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
         }),
       } as Response;
     };
@@ -120,13 +120,13 @@ describe("generateAgentMessage", () => {
   });
 
   it("returns repaired copy when missing reference and link, and keeps length under limit", async () => {
-    mockFetchResponse(true, "Hey Sam! Don't forget you owe £5.00 for Dinner at Dishoom.");
+    mockFetchResponse(true, "Hey Dev! Don't forget you owe £5.00 for Dinner at Dishoom.");
 
     const result = await generateAgentMessage(baseInput);
     assert.equal(result.source, "ollama_repaired");
     assert.equal(
       result.body,
-      "Hey Sam! Don't forget you owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1."
+      "Hey Dev! Don't forget you owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1."
     );
     assert.equal(result.safety.valid, true);
   });
@@ -134,14 +134,14 @@ describe("generateAgentMessage", () => {
   it("strips surrounding quotes", async () => {
     mockFetchResponse(
       true,
-      '"Hey Sam! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"'
+      '"Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"'
     );
 
     const result = await generateAgentMessage(baseInput);
     assert.equal(result.source, "ollama");
     assert.equal(
       result.body,
-      "Hey Sam! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"
+      "Hey Dev! You owe £5.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"
     );
   });
 
@@ -157,7 +157,7 @@ describe("generateAgentMessage", () => {
   });
 
   it("falls back when missing required fields even after repair (e.g. amount missing)", async () => {
-    mockFetchResponse(true, "Hey Sam! You owe some money for Dinner at Dishoom.");
+    mockFetchResponse(true, "Hey Dev! You owe some money for Dinner at Dishoom.");
 
     const result = await generateAgentMessage(baseInput);
     assert.equal(result.source, "template_fallback");

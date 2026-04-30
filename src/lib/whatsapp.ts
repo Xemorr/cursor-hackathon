@@ -49,8 +49,8 @@ const skippedEventTypes: Record<Extract<TwilioWhatsAppResult, { status: "skipped
   unsafe_message: "TWILIO_WHATSAPP_SKIPPED_UNSAFE_MESSAGE",
 };
 
-function isSamDemoDebtor(debtor: Debtor): boolean {
-  return debtor.name.trim().toLowerCase() === "sam" && debtor.paymentReference === "SAM-DISH-1";
+function isPrimaryDemoDebtor(debtor: Debtor): boolean {
+  return debtor.name.trim().toLowerCase() === "dev" && debtor.paymentReference === "SAM-DISH-1";
 }
 
 function countSentWhatsAppMessagesForDebtor(debtorId: string): number {
@@ -119,8 +119,8 @@ export async function sendDemoWhatsApp(input: SendDemoWhatsAppInput): Promise<Tw
     return { status: "skipped", ok: true, reason: "unsafe_message", message };
   }
 
-  if (!isSamDemoDebtor(debtor)) {
-    const message = `WhatsApp skipped for ${debtor.name}: live demo sending is restricted to Sam.`;
+  if (!isPrimaryDemoDebtor(debtor)) {
+    const message = `WhatsApp skipped for ${debtor.name}: live demo sending is restricted to Dev.`;
     logWhatsAppSkipped(debtor, "non_demo_recipient", message);
     return { status: "skipped", ok: true, reason: "non_demo_recipient", message };
   }

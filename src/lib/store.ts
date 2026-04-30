@@ -162,7 +162,7 @@ export type SeedDemoResult = {
 };
 
 export type SeedDemoInput = {
-  amountsCents?: Partial<Record<"Sam" | "Lucia" | "Hamza", number>>;
+  amountsCents?: Partial<Record<"Dev" | "Lucia" | "Hamza", number>>;
 };
 
 /**
@@ -175,13 +175,13 @@ export function seedDemo(input: SeedDemoInput = {}): SeedDemoResult {
   resetDemoPayments();
   resetEvents();
 
-  const samAmountCents = input.amountsCents?.Sam ?? 500;
+  const devAmountCents = input.amountsCents?.Dev ?? 500;
   const luciaAmountCents = input.amountsCents?.Lucia ?? 100;
   const hamzaAmountCents = input.amountsCents?.Hamza ?? 100;
 
   const expense = createExpense({
     title: "Dinner at Dishoom",
-    totalCents: samAmountCents + luciaAmountCents + hamzaAmountCents,
+    totalCents: devAmountCents + luciaAmountCents + hamzaAmountCents,
     currency: "GBP",
     paidBy: "Dev",
   });
@@ -189,9 +189,9 @@ export function seedDemo(input: SeedDemoInput = {}): SeedDemoResult {
   const created = [
     createDebtor({
       expenseId: expense.id,
-      name: "Sam",
+      name: "Dev",
       phone: "+447700900111",
-      amountCents: samAmountCents,
+      amountCents: devAmountCents,
       paymentReference: "SAM-DISH-1",
     }),
     createDebtor({
