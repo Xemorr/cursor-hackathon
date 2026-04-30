@@ -13,7 +13,7 @@ type DemoAction = "seed" | "reset" | "tick";
 
 const expense = {
   title: "Dinner at Dishoom",
-  totalCents: 9600,
+  totalCents: 300,
   paidBy: "Dev",
 };
 
@@ -128,6 +128,9 @@ function eventStatusInfo(type: EventLogEntry["eventType"]) {
     PAYMENT_CHECK_NO_MATCH: { color: "text-[var(--pp-text-dim)]", label: "FIN:NO_PAY" },
     PAYMENT_PARTIAL_WRONG_AMOUNT: { color: "text-[var(--pp-amber)]", label: "FIN:AMOUNT" },
     PAYMENT_PROBABLE_MATCH: { color: "text-[var(--pp-amber)]", label: "FIN:REVIEW" },
+    STARLING_POLL_STARTED: { color: "text-[var(--pp-text-muted)]", label: "BANK:POLL" },
+    STARLING_POLL_FAILED: { color: "text-[var(--pp-red)]", label: "BANK:FAILED" },
+    STARLING_POLL_COMPLETED: { color: "text-[var(--pp-lime)]", label: "BANK:SETTLED" },
     PAYMENT_MATCHED: { color: "text-[var(--pp-green)]", label: "FIN:MATCHED" },
     DEBT_CLOSED: { color: "text-[var(--pp-green)]", label: "SYS:CLOSED" },
     DEBTOR_PAUSED: { color: "text-[var(--pp-text-dim)]", label: "SYS:PAUSED" },
@@ -248,7 +251,7 @@ export default function Home() {
                 [1] Seed Demo Data
               </button>
               <p className="mt-1 px-1 text-[10px] leading-tight text-[var(--pp-text-dim)] uppercase">
-                Initialize &quot;Dinner at Dishoom&quot; scenario (£96, 3 debtors)              </p>
+                Initialize &quot;Dinner at Dishoom&quot; scenario (£3, 3 debtors)              </p>
             </div>
 
             <div>

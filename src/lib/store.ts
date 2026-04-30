@@ -169,7 +169,7 @@ export function seedDemo(): SeedDemoResult {
 
   const expense = createExpense({
     title: "Dinner at Dishoom",
-    totalCents: 9600,
+    totalCents: 300,
     currency: "GBP",
     paidBy: "Dev",
   });
@@ -179,22 +179,22 @@ export function seedDemo(): SeedDemoResult {
       expenseId: expense.id,
       name: "Sam",
       phone: "+447700900111",
-      amountCents: 3200,
-      paymentReference: "SAM-DISH-32",
+      amountCents: 100,
+      paymentReference: "SAM-DISH-1",
     }),
     createDebtor({
       expenseId: expense.id,
       name: "Lucia",
       phone: "+447700900112",
-      amountCents: 3200,
-      paymentReference: "LUCIA-DISH-32",
+      amountCents: 100,
+      paymentReference: "LUCIA-DISH-1",
     }),
     createDebtor({
       expenseId: expense.id,
       name: "Hamza",
       phone: "+447700900113",
-      amountCents: 3200,
-      paymentReference: "HAMZA-DISH-32",
+      amountCents: 100,
+      paymentReference: "HAMZA-DISH-1",
     }),
   ];
 

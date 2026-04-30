@@ -35,9 +35,9 @@ describe("generateAgentMessage", () => {
       id: "debtor_1",
       expenseId: "exp_1",
       name: "Sam",
-      amountCents: 3200,
+      amountCents: 100,
       currency: "GBP",
-      paymentReference: "SAM-DISH-32",
+      paymentReference: "SAM-DISH-1",
       escalationLevel: 1,
       state: "created",
       createdAt: new Date().toISOString(),
@@ -46,7 +46,7 @@ describe("generateAgentMessage", () => {
     expense: {
       title: "Dinner at Dishoom",
     },
-    paymentLink: "/pay/SAM-DISH-32",
+    paymentLink: "/pay/SAM-DISH-1",
   };
 
   const mockFetchResponse = (ok: boolean, responseText?: string) => {
@@ -65,7 +65,7 @@ describe("generateAgentMessage", () => {
       return {
         ok: true,
         json: async () => ({
-          response: "Hey Sam! You owe £32.00 for Dinner at Dishoom. Ref: SAM-DISH-32. Pay: /pay/SAM-DISH-32",
+          response: "Hey Sam! You owe £1.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
         }),
       } as Response;
     };
@@ -93,7 +93,7 @@ describe("generateAgentMessage", () => {
       return {
         ok: true,
         json: async () => ({
-          response: "Hey Sam! You owe £32.00 for Dinner at Dishoom. Ref: SAM-DISH-32. Pay: /pay/SAM-DISH-32",
+          response: "Hey Sam! You owe £1.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1",
         }),
       } as Response;
     };
@@ -120,13 +120,13 @@ describe("generateAgentMessage", () => {
   });
 
   it("returns repaired copy when missing reference and link, and keeps length under limit", async () => {
-    mockFetchResponse(true, "Hey Sam! Don't forget you owe £32.00 for Dinner at Dishoom.");
+    mockFetchResponse(true, "Hey Sam! Don't forget you owe £1.00 for Dinner at Dishoom.");
 
     const result = await generateAgentMessage(baseInput);
     assert.equal(result.source, "ollama_repaired");
     assert.equal(
       result.body,
-      "Hey Sam! Don't forget you owe £32.00 for Dinner at Dishoom. Ref: SAM-DISH-32. Pay: /pay/SAM-DISH-32."
+      "Hey Sam! Don't forget you owe £1.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1."
     );
     assert.equal(result.safety.valid, true);
   });
@@ -134,21 +134,21 @@ describe("generateAgentMessage", () => {
   it("strips surrounding quotes", async () => {
     mockFetchResponse(
       true,
-      '"Hey Sam! You owe £32.00 for Dinner at Dishoom. Ref: SAM-DISH-32. Pay: /pay/SAM-DISH-32"'
+      '"Hey Sam! You owe £1.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"'
     );
 
     const result = await generateAgentMessage(baseInput);
     assert.equal(result.source, "ollama");
     assert.equal(
       result.body,
-      "Hey Sam! You owe £32.00 for Dinner at Dishoom. Ref: SAM-DISH-32. Pay: /pay/SAM-DISH-32"
+      "Hey Sam! You owe £1.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"
     );
   });
 
   it("falls back to template_fallback when copy is unsafe (debt collector)", async () => {
     mockFetchResponse(
       true,
-      "I am a debt collector. You owe £32.00 for Dinner at Dishoom. Ref: SAM-DISH-32. Pay: /pay/SAM-DISH-32"
+      "I am a debt collector. You owe £1.00 for Dinner at Dishoom. Ref: SAM-DISH-1. Pay: /pay/SAM-DISH-1"
     );
 
     const result = await generateAgentMessage(baseInput);
@@ -174,7 +174,7 @@ describe("generateAgentMessage", () => {
 
   it("falls back when repaired message exceeds SMS limit", async () => {
     // Create a very long string that is just under 280, but missing ref and link
-    const longBase = "A".repeat(240) + " £32.00 Dinner at Dishoom";
+    const longBase = "A".repeat(240) + " £1.00 Dinner at Dishoom";
     mockFetchResponse(true, longBase);
 
     const result = await generateAgentMessage(baseInput);

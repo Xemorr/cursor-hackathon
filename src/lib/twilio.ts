@@ -49,7 +49,7 @@ const skippedEventTypes: Record<Extract<TwilioSmsResult, { status: "skipped" }>[
 };
 
 function isSamDemoDebtor(debtor: Debtor): boolean {
-  return debtor.name.trim().toLowerCase() === "sam" && debtor.paymentReference === "SAM-DISH-32";
+  return debtor.name.trim().toLowerCase() === "sam" && debtor.paymentReference === "SAM-DISH-1";
 }
 
 function countSentSmsForDebtor(debtorId: string): number {

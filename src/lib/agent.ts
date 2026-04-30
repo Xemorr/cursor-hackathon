@@ -1,6 +1,9 @@
 import { listEvents, logEvent } from "./events";
+import { isStarlingConfigured } from "./demoSafety";
 import { type MessagePolicy } from "./messageTemplates";
 import type { Debtor, DebtorState } from "./models";
+import { reconcileStarlingSettledTransactions, type ReconcileStarlingSettledTransactionsResult } from "./payments";
+import type { StarlingFeedItem } from "./starling";
 import { getDebtor, getExpense, listDebtors, saveDebtor } from "./store";
 import { generateAgentMessage } from "./ollama";
 import { transitionDebtor } from "./stateMachine";
@@ -16,6 +19,7 @@ const coreDemoAdvance: Partial<Record<DebtorState, DebtorState>> = {
 export type AgentTickInput = {
   debtorId?: string;
   policy?: MessagePolicy;
+  starlingFeedItems?: StarlingFeedItem[];
 };
 
 export type AgentTickResult =
@@ -26,6 +30,7 @@ export type AgentTickResult =
       message: string;
       generatedMessage?: string;
       whatsapp?: TwilioWhatsAppResult;
+      starling?: ReconcileStarlingSettledTransactionsResult;
     }
   | {
       ok: false;
@@ -33,13 +38,30 @@ export type AgentTickResult =
     };
 
 export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickResult> {
-  const debtors = listDebtors();
+  let debtors = listDebtors();
 
   if (debtors.length === 0) {
     return {
       ok: false,
       message: "No debtors found. Please seed demo data first.",
     };
+  }
+
+  let starling: ReconcileStarlingSettledTransactionsResult | undefined;
+  const shouldPollStarling = isStarlingConfigured() || input.starlingFeedItems;
+
+  if (shouldPollStarling) {
+    try {
+      starling = await reconcileStarlingSettledTransactions({
+        feedItems: input.starlingFeedItems,
+        expectedAmountCents: debtors
+          .filter((candidate) => candidate.state !== "closed")
+          .reduce((sum, candidate) => sum + candidate.amountCents, 0),
+      });
+      debtors = listDebtors();
+    } catch {
+      debtors = listDebtors();
+    }
   }
 
   const debtor = input.debtorId
@@ -50,7 +72,7 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
     if (input.debtorId) {
       return { ok: false, message: `Debtor ${input.debtorId} not found.` };
     }
-    return { ok: true, message: "All debts are successfully resolved." };
+    return { ok: true, message: "All debts are successfully resolved.", starling };
   }
 
   const to = coreDemoAdvance[debtor.state];
@@ -59,6 +81,7 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
       ok: true,
       debtor,
       advanced: false,
+      starling,
       message: `Debtor is in terminal or side state: ${debtor.state}.`,
     };
   }
@@ -153,6 +176,7 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
     advanced: true,
     generatedMessage: generated.body,
     whatsapp,
+    starling,
     message: `Advanced debtor ${debtor.id} from ${debtor.state} to ${to}.`,
   };
 }

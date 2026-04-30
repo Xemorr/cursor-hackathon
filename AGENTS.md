@@ -19,11 +19,11 @@ One-line product: an AI-powered repayment agent that splits informal debts, chas
 Demo expense:
 
 - Dinner at Dishoom
-- Total: GBP 96
+- Total: GBP 3
 - Paid by: Dev
 - Debtors: Lucia, Hamza, Sam
-- Split: GBP 32 each
-- Demo payment reference: `SAM-DISH-32`
+- Split: GBP 1 each
+- Demo payment reference: `SAM-DISH-1`
 
 Core flow:
 

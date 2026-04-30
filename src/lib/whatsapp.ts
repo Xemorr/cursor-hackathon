@@ -50,7 +50,7 @@ const skippedEventTypes: Record<Extract<TwilioWhatsAppResult, { status: "skipped
 };
 
 function isSamDemoDebtor(debtor: Debtor): boolean {
-  return debtor.name.trim().toLowerCase() === "sam" && debtor.paymentReference === "SAM-DISH-32";
+  return debtor.name.trim().toLowerCase() === "sam" && debtor.paymentReference === "SAM-DISH-1";
 }
 
 function countSentWhatsAppMessagesForDebtor(debtorId: string): number {
