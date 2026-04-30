@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Debtor, DebtorState, DemoPayment, EventLogEntry } from "@/lib/models";
 import { NarratorPanel } from "@/components/NarratorPanel";
 
@@ -10,7 +10,7 @@ type DemoState = {
   events: EventLogEntry[];
 };
 
-type DemoAction = "seed" | "reset" | "tick";
+type DemoAction = "start" | "reset";
 
 const expense = {
   title: "Dinner at Dishoom",
@@ -160,7 +160,9 @@ function eventStatusInfo(type: EventLogEntry["eventType"]) {
 export default function Home() {
   const [demoState, setDemoState] = useState<DemoState>({ debtors: [], payments: [], events: [] });
   const [runningAction, setRunningAction] = useState<DemoAction | null>(null);
+  const [demoRunning, setDemoRunning] = useState(false);
   const [notice, setNotice] = useState("Dashboard loaded. Seed demo data to start.");
+  const cycleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const sortedEvents = useMemo(
     () =>
@@ -188,17 +190,62 @@ export default function Home() {
           : "Collecting";
   const latestEvent = sortedEvents.at(-1);
 
+  const stopDemoTimer = useCallback(() => {
+    if (cycleTimerRef.current) {
+      clearInterval(cycleTimerRef.current);
+      cycleTimerRef.current = null;
+    }
+    setDemoRunning(false);
+  }, []);
+
+  const applyDemoPayload = useCallback((payload: DemoState) => {
+    setDemoState({
+      debtors: payload.debtors ?? [],
+      payments: payload.payments ?? [],
+      events: payload.events ?? [],
+    });
+  }, []);
+
+  const runAgentCycle = useCallback(async () => {
+    const response = await fetch("/api/agent/tick", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const payload = (await response.json()) as DemoState & { ok?: boolean; advanced?: boolean; message?: string };
+
+    if (!response.ok) {
+      throw new Error(payload.message ?? "Agent cycle failed.");
+    }
+
+    applyDemoPayload(payload);
+
+    const canAdvance = (payload.debtors ?? []).some((debtor) =>
+      ["created", "sms_1_sent", "sms_2_sent"].includes(debtor.state),
+    );
+
+    if (!payload.advanced && !canAdvance) {
+      stopDemoTimer();
+      setNotice(payload.message ?? "Demo automation complete.");
+      return;
+    }
+
+    setNotice(payload.message ?? "Agent cycle complete.");
+  }, [applyDemoPayload, stopDemoTimer]);
+
   async function runAction(action: DemoAction) {
     setRunningAction(action);
     setNotice("Running demo action...");
 
     try {
-      const endpoint =
-        action === "seed" ? "/api/demo/seed" : action === "reset" ? "/api/demo/reset" : "/api/agent/tick";
+      if (action === "reset") {
+        stopDemoTimer();
+      }
+
+      const endpoint = action === "start" ? "/api/demo/seed" : "/api/demo/reset";
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: action === "tick" ? JSON.stringify({}) : undefined,
       });
       const payload = (await response.json()) as DemoState & { ok?: boolean; message?: string };
 
@@ -206,18 +253,23 @@ export default function Home() {
         throw new Error(payload.message ?? "Demo action failed.");
       }
 
-      setDemoState({
-        debtors: payload.debtors ?? [],
-        payments: payload.payments ?? [],
-        events: payload.events ?? [],
-      });
-      setNotice(
-        action === "seed"
-          ? "Seeded Dinner at Dishoom."
-          : action === "reset"
-            ? "Demo state reset."
-            : payload.message ?? "Agent tick complete.",
-      );
+      applyDemoPayload(payload);
+
+      if (action === "start") {
+        if (cycleTimerRef.current) {
+          clearInterval(cycleTimerRef.current);
+        }
+        setDemoRunning(true);
+        setNotice("Demo started. Agent cycles run every 5 seconds.");
+        cycleTimerRef.current = setInterval(() => {
+          runAgentCycle().catch((error) => {
+            stopDemoTimer();
+            setNotice(error instanceof Error ? error.message : "Agent cycle failed.");
+          });
+        }, 5000);
+      } else {
+        setNotice("Demo state reset.");
+      }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Demo action failed.");
     } finally {
@@ -232,7 +284,7 @@ export default function Home() {
       .then((response) => response.json())
       .then((nextState: DemoState) => {
         if (active) {
-          setDemoState(nextState);
+          applyDemoPayload(nextState);
         }
       })
       .catch(() => {
@@ -244,7 +296,9 @@ export default function Home() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [applyDemoPayload]);
+
+  useEffect(() => stopDemoTimer, [stopDemoTimer]);
 
   return (
     <main className="min-h-screen bg-[var(--pp-bg)] px-6 py-6 font-mono text-[var(--pp-text)]">
@@ -263,24 +317,12 @@ export default function Home() {
               <button
                 className="w-full border border-[var(--pp-lime)] px-3 py-3 text-left text-sm font-bold text-[var(--pp-lime)] hover:bg-[var(--pp-lime)] hover:text-black disabled:cursor-wait disabled:opacity-50"
                 disabled={runningAction !== null}
-                onClick={() => runAction("seed")}
+                onClick={() => runAction("start")}
               >
-                [1] Seed Demo Data
+                [1] Start Demo
               </button>
               <p className="mt-1 px-1 text-[10px] leading-tight text-[var(--pp-text-dim)] uppercase">
-                Initialize &quot;Dinner at Dishoom&quot; scenario (£7, 3 debtors)              </p>
-            </div>
-
-            <div>
-              <button
-                className="w-full border border-[var(--pp-border-strong)] px-3 py-3 text-left text-sm font-bold hover:border-[var(--pp-text)] disabled:cursor-wait disabled:opacity-50"
-                disabled={runningAction !== null || !currentExpenseActive}
-                onClick={() => runAction("tick")}
-              >
-                [2] Run Agent Cycle
-              </button>
-              <p className="mt-1 px-1 text-[10px] leading-tight text-[var(--pp-text-dim)] uppercase">
-                Trigger the next autonomous recovery action
+                Seed Dinner at Dishoom, then run one agent cycle every 5 seconds
               </p>
             </div>
 
@@ -304,7 +346,7 @@ export default function Home() {
               <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--pp-lime)]">System Monitor</div>
             </div>
             <p className="text-sm font-bold leading-relaxed text-[var(--pp-text)]">
-              {notice}
+              {demoRunning ? `${notice} Next cycle in 5 seconds.` : notice}
             </p>
           </div>
 

@@ -7,7 +7,7 @@ import type { StarlingFeedItem } from "./starling";
 import { getDebtor, getExpense, listDebtors, saveDebtor } from "./store";
 import { generateAgentMessage } from "./ollama";
 import { transitionDebtor } from "./stateMachine";
-import { buildPublicDemoPaymentLink } from "./twilio";
+import { buildPublicDemoPaymentLink, sendDemoSms, type TwilioSmsResult } from "./twilio";
 import { sendVoiceCall, type VoiceCallResult } from "./voice";
 import { sendDemoWhatsApp, type TwilioWhatsAppResult } from "./whatsapp";
 
@@ -30,6 +30,7 @@ export type AgentTickResult =
       advanced?: boolean;
       message: string;
       generatedMessage?: string;
+      sms?: TwilioSmsResult;
       voice?: VoiceCallResult;
       whatsapp?: TwilioWhatsAppResult;
       starling?: ReconcileStarlingSettledTransactionsResult;
@@ -134,6 +135,15 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
     },
   });
 
+  const sms =
+    generated.channel === "sms"
+      ? await sendDemoSms({
+          debtor,
+          expense,
+          generatedMessage: generated,
+        })
+      : undefined;
+
   const whatsapp =
     generated.channel === "sms"
       ? await sendDemoWhatsApp({
@@ -152,6 +162,13 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
         })
       : undefined;
 
+  if (sms?.status === "failed") {
+    return {
+      ok: false,
+      message: sms.message,
+    };
+  }
+
   if (whatsapp?.status === "failed") {
     return {
       ok: false,
@@ -167,6 +184,8 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
       actor: "deterministic_agent_tick",
       eventCountBeforeTick: listEvents(debtor.id).length,
       messageSource: generated.source,
+      twilioSmsStatus: sms?.status,
+      twilioSmsReason: sms?.status === "skipped" ? sms.reason : undefined,
       twilioWhatsAppStatus: whatsapp?.status,
       twilioWhatsAppReason: whatsapp?.status === "skipped" ? whatsapp.reason : undefined,
       voiceProvider: voice?.provider,
@@ -192,6 +211,7 @@ export async function agentTick(input: AgentTickInput = {}): Promise<AgentTickRe
     debtor: result.debtor,
     advanced: true,
     generatedMessage: generated.body,
+    sms,
     voice,
     whatsapp,
     starling,
